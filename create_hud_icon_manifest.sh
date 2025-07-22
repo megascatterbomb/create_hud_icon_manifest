@@ -12,6 +12,7 @@ echo '{' >> "$OUTPUT_FILE"
 for map_file in "$MAPS_DIR"/*.bsp; do
     classicon_array=()  # Array to store ClassIcon names
     map_name=$(basename "$map_file" .bsp)
+    map_templates=()  # Array to store template names found in this map
     
     # Iterate through relevant .pop files
     for pop_file in "$POP_DIR"/"$map_name"*.pop; do
@@ -76,18 +77,7 @@ for map_file in "$MAPS_DIR"/*.bsp; do
         echo -e "\t\"$map_name\"" >> "$OUTPUT_FILE"
         echo -e "\t{" >> "$OUTPUT_FILE"
         echo -e "\t\t\"Map\" \"$map_name\"" >> "$OUTPUT_FILE"
-	# 
-    #     for icon in "${classicon_array[@]}"; do
-    #         printf '\t\t"File" "materials/hud/leaderboard_class_%s.vmt"\n' "$icon" >> "$OUTPUT_FILE"
-    #         printf '\t\t"File" "materials/hud/leaderboard_class_%s.vtf"\n' "$icon" >> "$OUTPUT_FILE"
-	# 		
-	# 		# If the icon ends with "_giant", also include the non-giant .vtf file
-    #         if [[ "$icon" == *_giant ]]; then
-    #             non_giant_icon="${icon%_giant}"  # Remove "_giant" suffix
-    #             printf '\t\t"File" "materials/hud/leaderboard_class_%s.vtf"\n' "$non_giant_icon" >> "$OUTPUT_FILE"
-    #         fi
-    #     done
-	# 
+        
 		for icon in "${classicon_array[@]}"; do
 			vmt_path="materials/hud/leaderboard_class_${icon}.vmt"
 		
@@ -106,7 +96,12 @@ for map_file in "$MAPS_DIR"/*.bsp; do
 				')
 		
 				if [[ -n "$base_texture" ]]; then
-					printf '\t\t"File" "materials/%s.vtf"\n' "$base_texture" >> "$OUTPUT_FILE"
+					texture_path="./materials/${base_texture}.vtf"
+                    if [[ -f "$texture_path" ]]; then
+                        printf '\t\t"File" "materials/%s.vtf"\n' "$base_texture" >> "$OUTPUT_FILE"
+                    else
+                        echo "Warning: Texture file '$texture_path' not found. Skipping." >&2
+                    fi
 				else
 					echo "Warning: Could not extract baseTexture from $vmt_path" >&2
 				fi
