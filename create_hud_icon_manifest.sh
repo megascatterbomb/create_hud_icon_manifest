@@ -37,6 +37,7 @@ for map_file in "$MAPS_DIR"/*.bsp; do
         fi
     done
 
+    unset 'template_lookup'
     declare -A template_lookup
     for tmpl in "${map_templates[@]}"; do
         key="${tmpl//[[:space:]]/}"
@@ -89,6 +90,7 @@ for map_file in "$MAPS_DIR"/*.bsp; do
     
     # Remove duplicates
     classicon_array=($(printf "%s\n" "${classicon_array[@]}" | sort -u))
+    vtf_files=()
 
     if [[ ${#classicon_array[@]} -gt 0 ]]; then
         echo -e "\t\"$map_name\"" >> "$OUTPUT_FILE"
@@ -115,8 +117,7 @@ for map_file in "$MAPS_DIR"/*.bsp; do
 				if [[ -n "$base_texture" ]]; then
 					texture_path="./materials/${base_texture}.vtf"
                     if [[ -f "$texture_path" ]]; then
-                        echo "$icon -> $base_texture"
-                        printf '\t\t"File" "materials/%s.vtf"\n' "$base_texture" >> "$OUTPUT_FILE"
+                        vtf_files+=("$base_texture")
                     else
                         echo "Warning: $icon references $base_texture.vtf but that file does not exist. Skipping." >&2
                     fi
@@ -127,6 +128,14 @@ for map_file in "$MAPS_DIR"/*.bsp; do
 				echo "Warning: Missing .vmt file for $icon" >&2
 			fi
 		done
+        echo "VTF Files:"
+        # Remove duplicates
+        vtf_files=($(printf "%s\n" "${vtf_files[@]}" | sort -u))
+        for vtf_file in "${vtf_files[@]}"; do
+            echo "$vtf_file"
+            printf '\t\t"File" "materials/%s.vtf"\n' "$vtf_file" >> "$OUTPUT_FILE"
+        done
+
         echo -e "\t\t\"Precache\" \"Generic\"" >> "$OUTPUT_FILE"
         echo -e "\t}" >> "$OUTPUT_FILE"
     fi
