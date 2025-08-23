@@ -266,6 +266,9 @@ for map_file in "$MAPS_DIR"/*.bsp; do
 
         echo -e "\t\t\"Precache\" \"Generic\"" >> "$OUTPUT_FILE"
         echo -e "\t}" >> "$OUTPUT_FILE"
+
+        # show number of VMT and VTF files added
+        echo "Added $map_name with ${#classicon_array[@]} VMT and ${#vtf_files[@]} VTF files"
     fi
 done
 
