@@ -157,7 +157,7 @@ for map_file in "$MAPS_DIR"/*.bsp; do
     done
 
     # Process each base file
-    for base_file in "${base_files[@]}"; do
+    for base_file in "${map_base_files[@]}"; do
         template_path="$POP_DIR/$base_file"
         if [[ -f "$template_path" ]]; then
             current_template=""
