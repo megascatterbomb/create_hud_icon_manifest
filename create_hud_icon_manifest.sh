@@ -234,7 +234,7 @@ for map_file in "$MAPS_DIR"/*.bsp; do
 				base_texture=$(tr -d '\r' < "$vmt_path" | awk '
 					BEGIN { IGNORECASE = 1 }
 					/\$baseTexture/ && /hud\/leaderboard_class_/ {
-						match($0, /"[^"]*"\s*"([^"]*hud\/leaderboard_class_[^"]*)"/, arr)
+						match($0, /\$[^"]*"?\s*"([^"]*hud\/leaderboard_class_[^"]*)"/, arr)
 						if (arr[1] != "") {
 							print arr[1]
 							exit
