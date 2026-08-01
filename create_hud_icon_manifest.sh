@@ -18,6 +18,7 @@ vlog() {
 MAPS_DIR="./maps"
 POP_DIR="./scripts/population"
 OUTPUT_FILE="./cfg/downloads.kv"
+EXTRA_DOWNLOADS_FILE="./cfg/extra_downloads.txt"
 
 # Ignore vanilla icons
 IGNORE_ICONS=(
@@ -113,6 +114,36 @@ IGNORE_ICONS=(
     "teleporter"
 )
 
+get_extra_downloads() {
+    local target_map="$1"
+    local current_section=""
+    local line
+
+    [[ ! -f "$EXTRA_DOWNLOADS_FILE" ]] && return
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Trim whitespace
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+
+        # Skip empty lines and comments
+        [[ -z "$line" || "$line" =~ ^# ]] && continue
+
+        # Section header
+        if [[ "$line" =~ ^\[(.+)\]$ ]]; then
+            current_section="${BASH_REMATCH[1]}"
+            continue
+        fi
+
+        # Output entries if section matches
+        if [[ "$current_section" == "all" || "$current_section" == "$target_map" ]]; then
+            printf '\t\t"File" "%s"\n' "$line" >> "$OUTPUT_FILE"
+            vlog "Extra download for $target_map -> $line"
+        fi
+
+    done < "$EXTRA_DOWNLOADS_FILE"
+}
+
 # Start writing to downloads.kv
 echo '"Downloads"' > "$OUTPUT_FILE"
 echo '{' >> "$OUTPUT_FILE"
@@ -123,6 +154,10 @@ for map_file in "$MAPS_DIR"/*.bsp; do
     map_name=$(basename "$map_file" .bsp)
     map_base_files=()  # Array to store robot definition files referenced in the map's popfiles.
     map_templates=()  # Array to store template names found in this map
+
+    if [[ "$map_name" != mvm_* ]]; then
+        continue
+    fi
 
     echo "Processing map: $map_name"
     
@@ -263,6 +298,8 @@ for map_file in "$MAPS_DIR"/*.bsp; do
             vlog "$vtf_file.vtf"
             printf '\t\t"File" "materials/%s.vtf"\n' "$vtf_file" >> "$OUTPUT_FILE"
         done
+
+        get_extra_downloads "$map_name"
 
         echo -e "\t\t\"Precache\" \"Generic\"" >> "$OUTPUT_FILE"
         echo -e "\t}" >> "$OUTPUT_FILE"
